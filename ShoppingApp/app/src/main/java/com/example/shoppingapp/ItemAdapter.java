@@ -20,6 +20,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
      *
      */
 
+    //placeholder data container, could change in future
     ArrayList<Item> items;
 
     public ItemAdapter(Context context, ArrayList<Item> list) {
@@ -66,6 +67,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         // have matching column names, etc
         // example: holder.tvItemName.setText(items.get(position).getName());
     }
+
+
 
     @Override
     public int getItemCount() {
