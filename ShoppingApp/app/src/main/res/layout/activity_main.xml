@@ -38,4 +38,10 @@
         android:layout_height="wrap_content"
         tools:layout="@layout/fragment_login" />
 
+    <fragment
+        android:id="@+id/fragShopLayout"
+        android:name="com.example.shoppingapp.ShopFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
 </LinearLayout>
