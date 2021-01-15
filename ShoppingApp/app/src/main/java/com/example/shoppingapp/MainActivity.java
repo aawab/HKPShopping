@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.JsonArray;
@@ -51,13 +52,14 @@ public class MainActivity extends AppCompatActivity {
     Button btnUploadItem;
 
     RecyclerView rvList, rvCart;
+
+    ArrayList<Item> items;
     RecyclerView.Adapter<ItemAdapter.ViewHolder> myAdapter;
+    RecyclerView.LayoutManager layoutManager;
     //TODO declare cartAdapter w corresponding viewholder here, then initialize like with itemAdapter
 
     //TODO probably need to setup a basic cartItem class and adapter for the cartFragment exactly
     //how I did the shopFragment(or any way you think is better @Andrew)
-
-    ArrayList<Item> items;
 
     FragmentManager fragmentManager;
     Fragment fragLoginLayout, fragRegisterLayout, fragUploadLayout, fragShopLayout,
@@ -92,8 +94,14 @@ public class MainActivity extends AppCompatActivity {
         rvCart = findViewById(R.id.rvCart);
 
         //TODO setup ArrayList<Item> items here by downloading stuff from DB
+        items = new ArrayList<Item>();
 
         //TODO setup adapter constructor in ItemAdapter and create it accordingly(w arraylist again)
+        layoutManager = new LinearLayoutManager(getApplicationContext());
+        rvList.setLayoutManager(layoutManager);
+
+        myAdapter = new ItemAdapter(getApplicationContext(), items);
+        rvList.setAdapter(myAdapter);
         // once we gain access to the backend API from Tony
         // example: myAdapter = new ItemAdapter(getApplicationContext(),insert list name here);
 
@@ -572,10 +580,14 @@ public class MainActivity extends AppCompatActivity {
 
                 for (int index = 0; index < itemsJsonArray.size(); index++)
                 {
+                    Log.i("shopLog", "1");
                     JsonElement jsonElement = itemsJsonArray.get(index);
+                    Log.i("shopLog", "2");
                     JsonObject itemJsonObject = jsonElement.getAsJsonObject();
 
-                    items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), itemJsonObject.get("description").getAsString() ) );
+                    Log.i("shopLog", "3");
+                    items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), "" ) );
+                    Log.i("shopLog", "4");
 
                     myAdapter.notifyDataSetChanged();
                 }
@@ -583,7 +595,7 @@ public class MainActivity extends AppCompatActivity {
             }
             catch (Exception e)
             {
-                Log.i("shopLog", "Exception:" + e);
+                Log.i("shopLog", "Exception3:" + e);
                 return false;
             }
             return true;
