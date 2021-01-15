@@ -586,7 +586,7 @@ public class MainActivity extends AppCompatActivity {
                     JsonObject itemJsonObject = jsonElement.getAsJsonObject();
 
                     Log.i("shopLog", "3");
-                    items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), "" ) );
+                    items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), itemJsonObject.get("description").getAsString() ) );
                     Log.i("shopLog", "4");
 
                     myAdapter.notifyDataSetChanged();
