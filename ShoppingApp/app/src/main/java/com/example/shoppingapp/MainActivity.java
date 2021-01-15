@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.shoppingapp.ValidUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -21,9 +22,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
-
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -32,14 +32,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemClicked{
 
-    ImageView ivCart;
 
     EditText etUsername, etPassword;
     Button btnLogin, btnRegisterLink;
@@ -50,14 +47,14 @@ public class MainActivity extends AppCompatActivity {
     EditText etUploadName, etUploadPrice, etUploadDescription;
     Button btnUploadItem;
 
-    RecyclerView rvList, rvCart;
-    RecyclerView.Adapter<ItemAdapter.ViewHolder> myAdapter;
-    //TODO declare cartAdapter w corresponding viewholder here, then initialize like with itemAdapter
+    TextView tvSubtotal;
 
-    //TODO probably need to setup a basic cartItem class and adapter for the cartFragment exactly
-    //how I did the shopFragment(or any way you think is better @Andrew)
+    RecyclerView rvShop, rvCart;
+    RecyclerView.Adapter<ItemAdapter.ViewHolder> itemsAdapter;
+    RecyclerView.Adapter<CartAdapter.ViewHolder> cartAdapter;
 
     ArrayList<Item> items;
+    ArrayList<Item> cart;
 
     FragmentManager fragmentManager;
     Fragment fragLoginLayout, fragRegisterLayout, fragUploadLayout, fragShopLayout,
@@ -66,6 +63,14 @@ public class MainActivity extends AppCompatActivity {
     Boolean isLoggedIn; //bool for use for buttonClicks
     Boolean isAdmin; //bool for creating items if admin
     String jwtToken;
+
+    double subTotal;
+
+    @Override
+    public void onItemClicked(int position) {
+        cart.add(new Item(items.get(position).getName(),items.get(position).getPrice(),items.get(position).getDescription()));
+        cartAdapter.notifyDataSetChanged();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,19 +88,24 @@ public class MainActivity extends AppCompatActivity {
         etRegisterConfirmPassword = findViewById(R.id.etRegisterConfirmPassword);
 
         btnRegisterUser = findViewById(R.id.btnRegisterUser);
-        etUploadName = findViewById(R.id.etUploadName);
-        etUploadPrice = findViewById(R.id.etUploadPrice);
-        etUploadDescription = findViewById(R.id.etUploadDescription);
-        btnUploadItem = findViewById(R.id.btnUploadItem);
+        etUploadName = findViewById(R.id.tvDetailName);
+        etUploadPrice = findViewById(R.id.tvDetailPrice);
+        etUploadDescription = findViewById(R.id.tvDetailDesc);
+        btnUploadItem = findViewById(R.id.btnAddToCart);
 
-        rvList = findViewById(R.id.rvList);
+        tvSubtotal = findViewById(R.id.tvSubtotal);
+
+        rvShop = findViewById(R.id.rvShop);
         rvCart = findViewById(R.id.rvCart);
 
-        //TODO setup ArrayList<Item> items here by downloading stuff from DB
+        items = new ArrayList<Item>();
+        cart = new ArrayList<Item>();
 
-        //TODO setup adapter constructor in ItemAdapter and create it accordingly(w arraylist again)
-        // once we gain access to the backend API from Tony
-        // example: myAdapter = new ItemAdapter(getApplicationContext(),insert list name here);
+        itemsAdapter = new ItemAdapter(this,items);
+        cartAdapter = new CartAdapter(this,cart);
+
+        rvShop.setAdapter(itemsAdapter);
+        rvCart.setAdapter(cartAdapter);
 
         fragmentManager = getSupportFragmentManager();
 
@@ -113,20 +123,25 @@ public class MainActivity extends AppCompatActivity {
                                             .hide(fragCartLayout)
                                             .commit();
         isLoggedIn=false;
+
+
+
         btnLogin.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
                 // show shop fragment after web server login request
-                if ( isValidUsername(etUsername.getText().toString()) && isValidPassword(etPassword.getText().toString()) )
+                if ( ValidUtils.isValidUsername(etUsername.getText().toString()) && ValidUtils.isValidPassword(etPassword.getText().toString()) )
                 {
+                    items.clear();
+                    cart.clear();
                     new LoginInBackground().execute(etUsername.getText().toString(), etPassword.getText().toString());
                 }
                 else
                 {
-                    Log.i("shopLogin", "Username status: " + isValidUsername(etUsername.getText().toString()) + "\n" +
-                            "Password status: " + isValidPassword(etPassword.getText().toString()));
+                    Log.i("shopLogin", "Username status: " + ValidUtils.isValidUsername(etUsername.getText().toString()) + "\n" +
+                            "Password status: " + ValidUtils.isValidPassword(etPassword.getText().toString()));
                 }
             }
         });
@@ -149,18 +164,18 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v)
             {
                 // save to database then return to login screen
-                if ( isValidUsername(etRegisterUsername.getText().toString())
-                        && isValidPassword(etRegisterPassword.getText().toString())
+                if ( ValidUtils.isValidUsername(etRegisterUsername.getText().toString())
+                        && ValidUtils.isValidPassword(etRegisterPassword.getText().toString())
                         && etRegisterPassword.getText().toString().equals(etRegisterConfirmPassword.getText().toString())
-                        && isValidEmail(etRegisterEmail.getText().toString()) ) {
+                        && ValidUtils.isValidEmail(etRegisterEmail.getText().toString()) ) {
                     new RegisterInBackground().execute(etRegisterUsername.getText().toString(), etRegisterPassword.getText().toString(), etRegisterEmail.getText().toString());
                 }
                 else
                 {
-                    Log.i( "shopLogin", "Username status: " + isValidUsername(etRegisterUsername.getText().toString()) + "\n" +
-                            "Password status: " + isValidPassword(etRegisterPassword.getText().toString()) + "\n" +
+                    Log.i( "shopLogin", "Username status: " + ValidUtils.isValidUsername(etRegisterUsername.getText().toString()) + "\n" +
+                            "Password status: " + ValidUtils.isValidPassword(etRegisterPassword.getText().toString()) + "\n" +
                             "Confirm Password status: " + etRegisterPassword.getText().toString().equals(etRegisterConfirmPassword.getText().toString()) + "\n" +
-                            "Email status: " + isValidEmail(etRegisterEmail.getText().toString()) );
+                            "Email status: " + ValidUtils.isValidEmail(etRegisterEmail.getText().toString()) );
                 }
             }
         });
@@ -179,31 +194,41 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    protected Boolean isValidUsername(String inputUsername)
-    {
-        if ( inputUsername.isEmpty() || (inputUsername == null) || (inputUsername.length() < 1) )
+
+    @Override
+    public void onBackPressed() {
+        if(fragmentManager.findFragmentById(R.id.fragCartLayout).isVisible())
         {
-            return false;
+            for(int i =fragmentManager.getBackStackEntryCount(); i >2 ; i--){
+                fragmentManager.popBackStack();
+            }
+
+        }
+        super.onBackPressed();
+
+        //Log.i("shopLog",""+fragmentManager.getBackStackEntryAt(0).toString());
+
+        Log.i("shopLog","num " + fragmentManager.getBackStackEntryCount());
+        if(fragmentManager.getBackStackEntryCount() == 0 )
+        {
+            isLoggedIn=false;
+            isAdmin=false;
+            jwtToken="";
+            items.clear();
+            cart.clear();
+            itemsAdapter.notifyDataSetChanged();
+            cartAdapter.notifyDataSetChanged();
         }
 
-        return true;
-    }
-
-    protected Boolean isValidPassword(String inputPassword)
-    {
-        if ( inputPassword.isEmpty() || (inputPassword == null) || (inputPassword.length() < 1) )
+        if(fragmentManager.findFragmentById(R.id.fragCartLayout).isVisible())
         {
-            return false;
+            for(int i =fragmentManager.getBackStackEntryCount(); i >2 ; i--){
+                fragmentManager.popBackStack();
+            }
+
         }
 
-        return true;
     }
-
-    protected Boolean isValidEmail(String inputEmail)
-    {
-        return (!TextUtils.isEmpty(inputEmail) && Patterns.EMAIL_ADDRESS.matcher(inputEmail).matches());
-    }
-
 
     //ActionBar functionality here
     @Override
@@ -217,29 +242,29 @@ public class MainActivity extends AppCompatActivity {
 
         switch(item.getItemId()){
             case R.id.cart:
-                if(isLoggedIn)fragmentManager.beginTransaction().show(fragCartLayout)
-                                                .hide(fragLoginLayout)
-                                                .hide(fragRegisterLayout)
-                                                .hide(fragUploadLayout)
-                                                .hide(fragShopLayout).addToBackStack(null)
-                                                .commit();
+                if(isLoggedIn){
+                    subTotal=0;
+                    for(Item i:cart){
+                        subTotal+= Double.parseDouble(i.getPrice());
+                    }
+                    tvSubtotal.setText("Subtotal: $"+String.valueOf(subTotal));
+                    fragmentManager.beginTransaction().hide(fragUploadLayout).commit();
+                    fragmentManager.beginTransaction().hide(fragShopLayout).show(fragCartLayout)
+                            .addToBackStack(null)
+                            .commit();
+
+
+                }
                 else Toast.makeText(getApplicationContext(),"Not logged in, cannot access cart.",
                         Toast.LENGTH_SHORT).show();
                 break;
             case R.id.upload:
-                // test upload,,this works
-//                fragmentManager.beginTransaction().show(fragUploadLayout)
-//                        .hide(fragLoginLayout)
-//                        .hide(fragRegisterLayout)
-//                        .hide(fragCartLayout)
-//                        .hide(fragShopLayout).addToBackStack(null)
-//                        .commit();
-                if(isLoggedIn)fragmentManager.beginTransaction().show(fragUploadLayout)
-                                                    .hide(fragLoginLayout)
-                                                    .hide(fragRegisterLayout)
-                                                    .hide(fragCartLayout)
-                                                    .hide(fragShopLayout).addToBackStack(null)
-                                                    .commit();
+                if(isLoggedIn){
+                    fragmentManager.beginTransaction().hide(fragCartLayout).commit();
+                    fragmentManager.beginTransaction().hide(fragShopLayout).show(fragUploadLayout).addToBackStack(null)
+                            .commit();
+                }
+
                 else Toast.makeText(getApplicationContext(),"Not logged in, cannot upload item.",
                         Toast.LENGTH_SHORT).show();
                 break;
@@ -307,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
                        isAdmin = false;
                     }
 
-                    Log.i("shopLog", "isADmin: " + jsonObj.get("user").getAsJsonObject().get("role").toString());
+                    Log.i("shopLog", "isAdmin: " + jsonObj.get("user").getAsJsonObject().get("role").toString());
 
                     jwtToken = jsonObj.get("token").getAsString();
                     Log.i("shopLog", "jwtToken: " + jwtToken);
@@ -343,9 +368,8 @@ public class MainActivity extends AppCompatActivity {
             if (loginStatus)
             {
                 // switch to shop fragment
-
                 new DownloadInBackground().execute();
-                
+
             }
             else // login failure
             {
@@ -529,8 +553,8 @@ public class MainActivity extends AppCompatActivity {
             {
                 // switch to shop fragment
                 items.add( new Item( etUploadName.getText().toString(), etUploadPrice.getText().toString(), etUploadDescription.getText().toString() ) );
-                myAdapter.notifyDataSetChanged();
-                
+                itemsAdapter.notifyDataSetChanged();
+
                 fragmentManager.beginTransaction()
                         .hide(fragUploadLayout)
                         .show(fragShopLayout)
@@ -563,9 +587,9 @@ public class MainActivity extends AppCompatActivity {
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.setRequestProperty("authorization", "Bearer " + jwtToken);
-                
+
                 BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                
+
                 JsonObject jsonObj = new JsonParser().parse(reader).getAsJsonObject();
 
                 JsonArray itemsJsonArray = jsonObj.get("items").getAsJsonArray();
@@ -576,8 +600,7 @@ public class MainActivity extends AppCompatActivity {
                     JsonObject itemJsonObject = jsonElement.getAsJsonObject();
 
                     items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), itemJsonObject.get("description").getAsString() ) );
-
-                    myAdapter.notifyDataSetChanged();
+                    itemsAdapter.notifyDataSetChanged();
                 }
 
             }
@@ -597,22 +620,85 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean shopStatus) {
             super.onPostExecute(shopStatus);
-            
+
             if (shopStatus)
             {
-                myAdapter.notifyDataSetChanged();
+                itemsAdapter.notifyDataSetChanged();
 
                 isLoggedIn=true;
                 fragmentManager.beginTransaction()
                         .hide(fragLoginLayout)
+                        .hide(fragCartLayout)
+                        .hide(fragUploadLayout)
                         .show(fragShopLayout)
-                        .addToBackStack(null)
-                        .commit();
+                        .addToBackStack(null).commit();
             }
             else
             {
                 isLoggedIn=false;
                 Toast.makeText(getApplicationContext(),"Shop download failed",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+    public class CartSyncInBackground extends AsyncTask<String,Integer,Boolean>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Boolean doInBackground(String... username) {
+
+            String urlString = "https://install-gentoo.herokuapp.com/items"; //replace with cart db
+
+            try{
+                URL url = new URL(urlString);
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+                urlConnection.setRequestMethod("GET");
+                urlConnection.setRequestProperty("authorization","Bearer " + jwtToken);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+
+                JsonObject jsonObj = new JsonParser().parse(reader).getAsJsonObject();
+                JsonArray itemsJsonArray = jsonObj.get("cart").getAsJsonArray();
+
+
+                for (int index = 0; index < itemsJsonArray.size(); index++)
+                {
+                    JsonElement jsonElement = itemsJsonArray.get(index);
+                    JsonObject itemJsonObject = jsonElement.getAsJsonObject();
+                    cart.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), itemJsonObject.get("description").getAsString() ) );
+
+                    itemsAdapter.notifyDataSetChanged();
+                }
+            }
+
+            catch(Exception e){
+                Log.i("shopLog","Exception: " + e.getMessage());
+                return false;
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean hasSynced) {
+            if(hasSynced){
+                Log.i("shopLog","Cart synced successfully!");
+            }
+
+            else{
+                Toast.makeText(getApplicationContext(),"Failed to sync cart.",
                         Toast.LENGTH_SHORT).show();
             }
         }

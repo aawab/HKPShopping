@@ -3,6 +3,7 @@ package com.example.shoppingapp;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class Item {
@@ -47,5 +48,13 @@ public class Item {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean equals(@Nullable Item item) {
+        if(this.getName().equals(item.getName())&&this.getPrice().equals(item.getPrice())&&
+                this.getDescription().equals(item.getDescription())){
+            return true;
+        }
+        else return false;
     }
 }

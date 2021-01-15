@@ -7,10 +7,39 @@
     tools:context=".CartFragment">
 
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvCart"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/row_layout" />
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="13dp"
+            android:paddingTop="13dp"
+            android:paddingRight="13dp"
+            android:text="Your Cart"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvSubtotal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="13dp"
+            android:paddingRight="13dp"
+            android:text="TextView"
+            android:textSize="16sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="8dp"
+            tools:listitem="@layout/row_layout" />
+    </LinearLayout>
 
 </FrameLayout>

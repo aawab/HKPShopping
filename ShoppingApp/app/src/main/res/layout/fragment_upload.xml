@@ -35,7 +35,7 @@
             android:text="Item Name:" />
 
         <EditText
-            android:id="@+id/etUploadName"
+            android:id="@+id/tvDetailName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -59,12 +59,12 @@
             android:text="Price:" />
 
         <EditText
-            android:id="@+id/etUploadPrice"
+            android:id="@+id/tvDetailPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
-            android:inputType="textPersonName" />
+            android:inputType="number" />
     </LinearLayout>
 
     <LinearLayout
@@ -83,7 +83,7 @@
             android:text="Description:" />
 
         <EditText
-            android:id="@+id/etUploadDescription"
+            android:id="@+id/tvDetailDesc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -92,7 +92,7 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/btnUploadItem"
+        android:id="@+id/btnAddToCart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
