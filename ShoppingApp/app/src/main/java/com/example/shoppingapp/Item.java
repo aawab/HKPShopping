@@ -18,12 +18,14 @@ public class Item {
     private String name;
     private String price;
     private String description;
+    private int quantity;
 
 
     public Item(String name, String price, String description) {
         this.name = name;
         this.price = price;
         this.description = description;
+        quantity=1;
     }
 
     public String getName() {
@@ -56,5 +58,13 @@ public class Item {
             return true;
         }
         else return false;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 }

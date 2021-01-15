@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
     Button btnUploadItem;
 
     TextView tvSubtotal;
+    TextView tvCount;
 
     RecyclerView rvShop, rvCart;
     RecyclerView.Adapter<ItemAdapter.ViewHolder> itemsAdapter;
@@ -67,8 +68,23 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
     double subTotal;
 
     @Override
-    public void onItemClicked(int position) {
-        cart.add(new Item(items.get(position).getName(),items.get(position).getPrice(),items.get(position).getDescription()));
+    public void onItemClicked(int position)
+    {
+        boolean found=false;
+
+        for(Item a:cart)
+        {
+            if(a.getName().equals(items.get(position).getName())){
+               a.setQuantity(a.getQuantity()+1);
+               found=true;
+            }
+        }
+        if(!found){
+            Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
+                    (position).getDescription());
+            cart.add(i);
+        }
+
         cartAdapter.notifyDataSetChanged();
     }
 
@@ -245,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                 if(isLoggedIn){
                     subTotal=0;
                     for(Item i:cart){
-                        subTotal+= Double.parseDouble(i.getPrice());
+                        subTotal+= Double.parseDouble(i.getPrice())*i.getQuantity();
                     }
                     tvSubtotal.setText("Subtotal: $"+String.valueOf(subTotal));
                     fragmentManager.beginTransaction().hide(fragUploadLayout).commit();

@@ -23,7 +23,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
 
     public class ViewHolder extends RecyclerView.ViewHolder{
 
-        TextView tvItemName,tvItemDesc, tvItemPrice;
+        TextView tvItemName,tvItemDesc, tvItemPrice, tvItemCount;
         ImageView ivItemImage;
 
         public ViewHolder(@NonNull View itemView) {
@@ -32,6 +32,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
             tvItemName = itemView.findViewById(R.id.tvItemName);
             tvItemDesc = itemView.findViewById(R.id.tvItemDesc);
             tvItemPrice = itemView.findViewById(R.id.tvItemPrice);
+            tvItemCount = itemView.findViewById(R.id.tvCartCount);
 
             ivItemImage = itemView.findViewById(R.id.ivItemImage);
 
@@ -58,7 +59,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
         holder.itemView.setTag(items.get(position));
         holder.tvItemName.setText(items.get(position).getName());
         holder.tvItemDesc.setText(items.get(position).getDescription()); //optional, maybe remove later
-        holder.tvItemPrice.setText(items.get(position).getPrice());
+        holder.tvItemPrice.setText(String.format("$%.2f",Double.parseDouble(items.get(position).getPrice())));
+        holder.tvItemCount.setText("Quantity: " +String.valueOf(items.get(position).getQuantity()));
 
         //TODO if we use images, set the image resource here
     }

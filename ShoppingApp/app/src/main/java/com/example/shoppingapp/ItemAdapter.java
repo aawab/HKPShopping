@@ -71,7 +71,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         holder.itemView.setTag(items.get(position));
         holder.tvItemName.setText(items.get(position).getName());
         holder.tvItemDesc.setText(items.get(position).getDescription()); //optional, maybe remove later
-        holder.tvItemPrice.setText(items.get(position).getPrice());
+        holder.tvItemPrice.setText(String.format("$%.2f",Double.parseDouble(items.get(position).getPrice())));
+
 
         //TODO if we use images, set the image resource here
     }
