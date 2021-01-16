@@ -124,7 +124,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             if (bitmap != null) {
                 holder.ivItemImage.setImageBitmap(bitmap);
             } else {
-                Toast.makeText((Context)activity, "Failed to Download Image", Toast.LENGTH_LONG).show();
+                //Toast.makeText((Context)activity, "Failed to Download Image", Toast.LENGTH_LONG).show();
             }
         }
     }

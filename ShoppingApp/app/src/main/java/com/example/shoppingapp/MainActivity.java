@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
     TextView tvUrl;
     Button btnUploadItem, btnAddImage;
     ImageView ivImage;
-    //String filePath;
     String imageUrl;
 
     TextView tvSubtotal;
@@ -81,17 +80,20 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         for(Item a:cart)
         {
             if(a.equals(items.get(position))){
-               a.setQuantity(a.getQuantity()+1);
+               Item i = new Item(a.getName(),a.getPrice(),a.getDescription(),a.getImage());
+               i.setQuantity(a.getQuantity()+1);
+                new CartAddOnlineInBackground().execute(i);
+                new CartSyncInBackground().execute();
                found=true;
             }
         }
+
         if(!found){
             Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
                     (position).getDescription(),items.get(position).getImage());
             Log.i("shopLog","picture:"+ i.getImage());
-            cart.add(i);
-
             new CartAddOnlineInBackground().execute(i);
+            new CartSyncInBackground().execute();
         }
 
         cartAdapter.notifyDataSetChanged();
@@ -752,6 +754,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                 
                 Set<String> keys = jsonCartObj.keySet();
 
+                cart.clear();
                 for (String key: keys)
                 {
                     JsonObject jsonCartItemObj = jsonCartObj.get(key).getAsJsonObject();
@@ -894,7 +897,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         @Override
         protected Boolean doInBackground(String... nothing) {
 
-            String urlString = "https://install-gentoo.herokuapp.com/users/cart-items/checkout"; //REPLACE W CART DB URL
+            String urlString = "https://install-gentoo.herokuapp.com/users/cart-items/checkout";
 
             try{
                 URL url = new URL(urlString);
