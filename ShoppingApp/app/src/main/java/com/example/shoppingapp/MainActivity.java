@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.shoppingapp.ValidUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -17,9 +16,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
-import android.util.Patterns;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,10 +28,8 @@ import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -51,10 +46,12 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
     EditText etRegisterUsername, etRegisterEmail, etRegisterPassword, etRegisterConfirmPassword;
     Button btnRegisterUser;
 
-    EditText etUploadName, etUploadPrice, etUploadDescription;
+    EditText etUploadName, etUploadPrice, etUploadDescription, etImageUrl;
+    TextView tvUrl;
     Button btnUploadItem, btnAddImage;
     ImageView ivImage;
-    String filePath;
+    //String filePath;
+    URL imageUrl;
 
     TextView tvSubtotal;
     Button btnCheckout;
@@ -90,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
         if(!found){
             Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
-                    (position).getDescription());
+                    (position).getDescription(),items.get(position).getImage());
             cart.add(i);
 
             new CartAddOnlineInBackground().execute(i);
@@ -115,11 +112,14 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         etRegisterConfirmPassword = findViewById(R.id.etRegisterConfirmPassword);
 
         btnRegisterUser = findViewById(R.id.btnRegisterUser);
-        etUploadName = findViewById(R.id.tvDetailName);
-        etUploadPrice = findViewById(R.id.tvDetailPrice);
-        etUploadDescription = findViewById(R.id.tvDetailDesc);
+        etUploadName = findViewById(R.id.etDetailName);
+        etUploadPrice = findViewById(R.id.etDetailPrice);
+        etUploadDescription = findViewById(R.id.etDetailDesc);
+        etImageUrl = findViewById(R.id.etImageUrl);
+        tvUrl = findViewById(R.id.tvUrlTitle);
+
         btnUploadItem = findViewById(R.id.btnAddToCart);
-        btnAddImage = findViewById(R.id.btnAddImage);
+        btnAddImage = findViewById(R.id.btnSearchImage);
         ivImage = findViewById(R.id.ivSelectedImage);
         ivImage.setVisibility(View.GONE);
 
@@ -214,11 +214,12 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         btnAddImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent,1);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://www.google.com/imghp?hl=en"));
+                startActivity(intent);
             }
         });
+
         btnUploadItem.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -249,32 +250,21 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         });
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==1){
-            if(resultCode==RESULT_OK){
-                Uri imageUri = data.getData();
-                btnAddImage.setVisibility(View.GONE);
-                ivImage.setVisibility(View.VISIBLE);
-                ivImage.setImageURI(imageUri);
-
-                filePath=imageUri.getPath();
-                File file = new File(filePath);
-            }
-        }
-    }
-
-    //public String getPath(Uri uri) {
-    //    String[] projection = {MediaColumns.DATA};
-    //    Cursor cursor = managedQuery(uri, projection, null, null, null);
-    //    column_index = cursor
-    //            .getColumnIndexOrThrow(MediaColumns.DATA);
-    //    cursor.moveToFirst();
-    //    imagePath = cursor.getString(column_index);
+   // @Override
+    //    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    //        super.onActivityResult(requestCode, resultCode, data);
+    //        if(requestCode==1){
+    //            if(resultCode==RESULT_OK){
+    //                Uri imageUri = data.getData();
+    //                btnAddImage.setVisibility(View.GONE);
+    //                ivImage.setVisibility(View.VISIBLE);
+    //                ivImage.setImageURI(imageUri);
     //
-    //    return cursor.getString(column_index);
-    //}
+    //                //filePath=imageUri.getPath();
+    //                //File file = new File(filePath);
+    //            }
+    //        }
+    //    }
 
     @Override
     public void onBackPressed() {
@@ -641,7 +631,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
             if (uploadStatus)
             {
                 // switch to shop fragment
-                items.add( new Item( etUploadName.getText().toString(), etUploadPrice.getText().toString(), etUploadDescription.getText().toString() ) );
+                items.add( new Item( etUploadName.getText().toString(), etUploadPrice.getText().toString(), etUploadDescription.getText().toString(),etImageUrl.getText().toString() ) );
                 itemsAdapter.notifyDataSetChanged();
 
                 fragmentManager.beginTransaction()
@@ -688,7 +678,9 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                     JsonElement jsonElement = itemsJsonArray.get(index);
                     JsonObject itemJsonObject = jsonElement.getAsJsonObject();
 
-                    items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), itemJsonObject.get("description").getAsString() ) );
+                    items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.
+                            get("price").getAsString(), itemJsonObject.get("description").getAsString(),
+                            itemJsonObject.get("picture").getAsString() ) );
                     itemsAdapter.notifyDataSetChanged();
                 }
 
@@ -764,7 +756,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
                     Item i = new Item( jsonCartItemObj.get("itemname").getAsString(),
                     jsonCartItemObj.get("price").getAsString(),
-                    jsonCartItemObj.get("description").getAsString());
+                    jsonCartItemObj.get("description").getAsString(),jsonCartItemObj.get("picture").
+                            getAsString());
                     
                     i.setQuantity(jsonCartItemObj.get("quantity").getAsInt());
 

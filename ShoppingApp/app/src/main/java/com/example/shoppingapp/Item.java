@@ -13,19 +13,19 @@ public class Item {
      * Probably have to wait for Tony to send backend API so we can know how to name fields,etc
      */
 
-     //TODO wait for tony backend stuff to see if we need pics or not
-
     private String name;
     private String price;
     private String description;
     private int quantity;
+    private String image;
 
 
 
-    public Item(String name, String price, String description) {
+    public Item(String name, String price, String description,String image) {
         this.name = name;
         this.price = price;
         this.description = description;
+        this.image=image;
         quantity=1;
     }
 
@@ -67,5 +67,13 @@ public class Item {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 }

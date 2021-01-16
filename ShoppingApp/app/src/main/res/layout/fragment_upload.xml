@@ -11,21 +11,29 @@
     tools:context=".UploadFragment">
 
     <Button
-        android:id="@+id/btnAddImage"
+        android:id="@+id/btnSearchImage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="50dp"
         android:layout_marginTop="50dp"
         android:layout_marginRight="50dp"
-        android:text="add image"
+        android:text="search for image"
         android:visibility="visible" />
+
+    <Button
+        android:id="@+id/btnSync"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="120dp"
+        android:layout_marginRight="120dp"
+        android:text="sync" />
 
     <ImageView
         android:id="@+id/ivSelectedImage"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginLeft="50dp"
-        android:layout_marginTop="70dp"
+        android:layout_marginTop="30dp"
         android:layout_marginRight="50dp"
         android:src="@android:drawable/btn_dialog" />
 
@@ -38,6 +46,30 @@
         android:orientation="horizontal">
 
         <TextView
+            android:id="@+id/tvUrlTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Image Url:" />
+
+        <EditText
+            android:id="@+id/etImageUrl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:inputType="textUri" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="20dp"
+        android:orientation="horizontal">
+
+        <TextView
             android:id="@+id/textView4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -45,7 +77,7 @@
             android:text="Item Name:" />
 
         <EditText
-            android:id="@+id/tvDetailName"
+            android:id="@+id/etDetailName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -69,7 +101,7 @@
             android:text="Price:" />
 
         <EditText
-            android:id="@+id/tvDetailPrice"
+            android:id="@+id/etDetailPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -93,7 +125,7 @@
             android:text="Description:" />
 
         <EditText
-            android:id="@+id/tvDetailDesc"
+            android:id="@+id/etDetailDesc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
