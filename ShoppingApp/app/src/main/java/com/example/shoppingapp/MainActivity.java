@@ -1,6 +1,7 @@
 package com.example.shoppingapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -11,6 +12,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -27,11 +31,14 @@ import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -45,10 +52,12 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
     Button btnRegisterUser;
 
     EditText etUploadName, etUploadPrice, etUploadDescription;
-    Button btnUploadItem;
+    Button btnUploadItem, btnAddImage;
+    ImageView ivImage;
+    String filePath;
 
     TextView tvSubtotal;
-    TextView tvCount;
+    Button btnCheckout;
 
     RecyclerView rvShop, rvCart;
     RecyclerView.Adapter<ItemAdapter.ViewHolder> itemsAdapter;
@@ -83,6 +92,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
             Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
                     (position).getDescription());
             cart.add(i);
+
+            new CartAddOnlineInBackground().execute(i);
         }
 
         cartAdapter.notifyDataSetChanged();
@@ -108,8 +119,12 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         etUploadPrice = findViewById(R.id.tvDetailPrice);
         etUploadDescription = findViewById(R.id.tvDetailDesc);
         btnUploadItem = findViewById(R.id.btnAddToCart);
+        btnAddImage = findViewById(R.id.btnAddImage);
+        ivImage = findViewById(R.id.ivSelectedImage);
+        ivImage.setVisibility(View.GONE);
 
         tvSubtotal = findViewById(R.id.tvSubtotal);
+        btnCheckout = findViewById(R.id.btnCheckout);
 
         rvShop = findViewById(R.id.rvShop);
         rvCart = findViewById(R.id.rvCart);
@@ -196,6 +211,14 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
             }
         });
 
+        btnAddImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                startActivityForResult(intent,1);
+            }
+        });
         btnUploadItem.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -208,8 +231,50 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                 }
             }
         });
+        
+        btnCheckout.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View v)
+            {
+                if(cart.size()==0)
+                {
+                    Toast.makeText(getApplicationContext(),"Cart is empty!",Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    new CheckoutCartInBackground().execute();
+                }
+            }
+        });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==1){
+            if(resultCode==RESULT_OK){
+                Uri imageUri = data.getData();
+                btnAddImage.setVisibility(View.GONE);
+                ivImage.setVisibility(View.VISIBLE);
+                ivImage.setImageURI(imageUri);
+
+                filePath=imageUri.getPath();
+                File file = new File(filePath);
+            }
+        }
+    }
+
+    //public String getPath(Uri uri) {
+    //    String[] projection = {MediaColumns.DATA};
+    //    Cursor cursor = managedQuery(uri, projection, null, null, null);
+    //    column_index = cursor
+    //            .getColumnIndexOrThrow(MediaColumns.DATA);
+    //    cursor.moveToFirst();
+    //    imagePath = cursor.getString(column_index);
+    //
+    //    return cursor.getString(column_index);
+    //}
 
     @Override
     public void onBackPressed() {
@@ -276,9 +341,15 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                 break;
             case R.id.upload:
                 if(isLoggedIn){
-                    fragmentManager.beginTransaction().hide(fragCartLayout).commit();
-                    fragmentManager.beginTransaction().hide(fragShopLayout).show(fragUploadLayout).addToBackStack(null)
-                            .commit();
+                    if(isAdmin) {
+                        fragmentManager.beginTransaction().hide(fragCartLayout).commit();
+                        fragmentManager.beginTransaction().hide(fragShopLayout).show(fragUploadLayout).addToBackStack(null)
+                                .commit();
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(),"Must be admin to upload!",
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
 
                 else Toast.makeText(getApplicationContext(),"Not logged in, cannot upload item.",
@@ -339,7 +410,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
                     JsonObject jsonObj = new JsonParser().parse(responseReader).getAsJsonObject();
 
-                    if (jsonObj.get("user").getAsJsonObject().get("role").toString().equals("admin"))
+                    if (jsonObj.get("user").getAsJsonObject().get("role").toString().equals("\"admin\""))
                     {
                        isAdmin = true;
                     }
@@ -385,6 +456,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
             {
                 // switch to shop fragment
                 new DownloadInBackground().execute();
+
+                new CartSyncInBackground().execute();
 
             }
             else // login failure
@@ -658,7 +731,6 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
     }
 
-
     public class CartSyncInBackground extends AsyncTask<String,Integer,Boolean>{
 
         @Override
@@ -669,9 +741,10 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         @Override
         protected Boolean doInBackground(String... username) {
 
-            String urlString = "https://install-gentoo.herokuapp.com/items"; //replace with cart db
+            String urlString = "https://install-gentoo.herokuapp.com/users/cart-items";
 
-            try{
+            try
+            {
                 URL url = new URL(urlString);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 
@@ -681,16 +754,23 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                 BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 
                 JsonObject jsonObj = new JsonParser().parse(reader).getAsJsonObject();
-                JsonArray itemsJsonArray = jsonObj.get("cart").getAsJsonArray();
+                JsonObject jsonCartObj = jsonObj.get("cart").getAsJsonObject();
+                
+                Set<String> keys = jsonCartObj.keySet();
 
-
-                for (int index = 0; index < itemsJsonArray.size(); index++)
+                for (String key: keys)
                 {
-                    JsonElement jsonElement = itemsJsonArray.get(index);
-                    JsonObject itemJsonObject = jsonElement.getAsJsonObject();
-                    cart.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.get("price").getAsString(), itemJsonObject.get("description").getAsString() ) );
+                    JsonObject jsonCartItemObj = jsonCartObj.get(key).getAsJsonObject();
 
-                    itemsAdapter.notifyDataSetChanged();
+                    Item i = new Item( jsonCartItemObj.get("itemname").getAsString(),
+                    jsonCartItemObj.get("price").getAsString(),
+                    jsonCartItemObj.get("description").getAsString());
+                    
+                    i.setQuantity(jsonCartItemObj.get("quantity").getAsInt());
+
+                    cart.add(i);
+
+                    cartAdapter.notifyDataSetChanged();
                 }
             }
 
@@ -699,7 +779,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                 return false;
             }
 
-            return null;
+            return true;
         }
 
         @Override
@@ -714,7 +794,159 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
             }
 
             else{
-                Toast.makeText(getApplicationContext(),"Failed to sync cart.",
+                Toast.makeText(getApplicationContext(),"Cart is Empty or Failed to sync cart.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public class CartAddOnlineInBackground extends AsyncTask<Item, Integer, Boolean>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Boolean doInBackground(Item...cart) {
+
+            String urlString = "https://install-gentoo.herokuapp.com/users/cart-items";
+
+            try
+            {
+                String urlParameters  = "itemname=" + cart[0].getName() +  "&price=" + cart[0].getPrice() + 
+                                        "&description=" + cart[0].getDescription() + "&quantity=" + cart[0].getQuantity();
+                byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
+
+                URL url = new URL(urlString);
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setRequestProperty("authorization", "Bearer " + jwtToken);
+
+                urlConnection.setDoOutput(true);
+                urlConnection.setDoInput(true);
+
+
+                DataOutputStream writer = new DataOutputStream(urlConnection.getOutputStream());
+                writer.write(postData);
+                urlConnection.connect();
+
+                writer.flush();
+                writer.close();
+//                out.close();
+
+                String response = "";
+                int responseCode = urlConnection.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK)
+                {
+                    String line;
+                    BufferedReader responseReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+
+                    while ((line = responseReader.readLine()) != null)
+                    {
+                        response += line;
+                    }
+
+                    Log.i("shopLog", response);
+                    return true;
+                }
+                else
+                {
+                    response = "ERR";
+
+                    Log.i("shopLog", response);
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.i("shopLog", "Error:" + e);
+                return false;
+            }
+
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean cartUploadStatus) {
+            super.onPostExecute(cartUploadStatus);
+
+            if (cartUploadStatus)
+            {
+                Toast.makeText(getApplicationContext(),"cart item saved",
+                        Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                Toast.makeText(getApplicationContext(),"cart item upload failed",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public class CheckoutCartInBackground extends AsyncTask<String,Integer,Boolean>{
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Boolean doInBackground(String... nothing) {
+
+            String urlString = "https://install-gentoo.herokuapp.com/users/cart-items/checkout"; //REPLACE W CART DB URL
+
+            try{
+                URL url = new URL(urlString);
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+                urlConnection.setRequestMethod("GET");
+                urlConnection.setRequestProperty("authorization", "Bearer " + jwtToken);
+
+                int responseCode = urlConnection.getResponseCode();
+
+                if (responseCode == HttpsURLConnection.HTTP_OK)
+                {
+                    Log.i("shopLog", "OK");
+                }
+                else
+                {
+                    Log.i("shopLog", "ERR");
+                    return false;
+                }
+            }
+
+            catch(Exception e){
+                Log.i("shopLog","Exception: " + e.getMessage());
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean hasSynced) {
+            if(hasSynced)
+            {
+                Log.i("shopLog","Checked out successfully!");
+                cart.clear();
+                subTotal=0.00;
+                tvSubtotal.setText("Subtotal: " + String.format("$%.2f",subTotal));
+                cartAdapter.notifyDataSetChanged();
+            }
+
+            else
+            {
+                Toast.makeText(getApplicationContext(),"Failed to checkout.",
                         Toast.LENGTH_SHORT).show();
             }
         }
