@@ -55,7 +55,7 @@ public class Item {
 
     public boolean equals(@Nullable Item item) {
         if(this.getName().equals(item.getName())&&this.getPrice().equals(item.getPrice())&&
-                this.getDescription().equals(item.getDescription())){
+                this.getDescription().equals(item.getDescription())&&this.getImage().equals(item.getImage())){
             return true;
         }
         else return false;

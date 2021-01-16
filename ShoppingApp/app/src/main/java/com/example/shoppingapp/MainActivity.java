@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
         for(Item a:cart)
         {
-            if(a.getName().equals(items.get(position).getName())){
+            if(a.equals(items.get(position))){
                a.setQuantity(a.getQuantity()+1);
                found=true;
             }
@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         if(!found){
             Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
                     (position).getDescription(),items.get(position).getImage());
+            Log.i("shopLog","picture:"+ i.getImage());
             cart.add(i);
 
             new CartAddOnlineInBackground().execute(i);
@@ -228,7 +229,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                 // save to database possibly, but definitely update the current shop then return to shop
                 if ( (etUploadName.getText().toString().isEmpty() == false) && (etUploadPrice.getText().toString().isEmpty() == false) )
                 {
-                    new UploadInBackground().execute(etUploadName.getText().toString(), etUploadPrice.getText().toString(), etUploadDescription.getText().toString(), jwtToken);
+                    new UploadInBackground().execute(etUploadName.getText().toString(), etUploadPrice.
+                            getText().toString(), etUploadDescription.getText().toString(), etImageUrl.getText().toString(),jwtToken);
                 }
             }
         });
@@ -559,21 +561,21 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
         @Override
         protected Boolean doInBackground(String... itemData) {
-            Log.i("shopData", "item name: " + itemData[0] + " price: " + itemData[1] + "description: " + itemData[2]);
+            Log.i("shopLog", "item name: " + itemData[0] + " price: " + itemData[1] + "description: " + itemData[2]+ "picture: "+ itemData[3]);
 
             String urlString = "https://install-gentoo.herokuapp.com/items";
 
             try
             {
-                String urlParameters  = "itemname=" + itemData[0] +  "&price=" + itemData[1] + "&description=" + itemData[2];
+                String urlParameters  = "itemname=" + itemData[0] +  "&price=" + itemData[1] + "&description=" + itemData[2]+"&picture="+itemData[3];
                 byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
 
                 URL url = new URL(urlString);
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("POST");
-                urlConnection.setRequestProperty("authorization", "Bearer " + itemData[3]);
+                urlConnection.setRequestProperty("authorization", "Bearer " + itemData[4]);
 
-                Log.i("shopLog",  "Bearer " + itemData[3]);
+                Log.i("shopLog",  "Bearer " + itemData[4]);
 
                 urlConnection.setDoOutput(true);
                 urlConnection.setDoInput(true);
@@ -807,7 +809,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
             try
             {
                 String urlParameters  = "itemname=" + cart[0].getName() +  "&price=" + cart[0].getPrice() + 
-                                        "&description=" + cart[0].getDescription() + "&quantity=" + cart[0].getQuantity();
+                                        "&description=" + cart[0].getDescription() +"&picture="+
+                        cart[0].getImage()+ "&quantity=" + cart[0].getQuantity();
                 byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
 
                 URL url = new URL(urlString);
