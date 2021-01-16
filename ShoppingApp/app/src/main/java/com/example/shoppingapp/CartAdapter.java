@@ -1,24 +1,35 @@
 package com.example.shoppingapp;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
 
     ArrayList<Item> items;
+    CartAdapter.ViewHolder holder;
+    Context activity;
 
     public CartAdapter(Context context, ArrayList<Item> list) {
         items=list;
-
+        activity=context;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder{
@@ -41,9 +52,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
                 public void onClick(View v) {
                 }
             });
-
         }
-
     }
 
     @NonNull
@@ -56,19 +65,55 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
 
     @Override
     public void onBindViewHolder(@NonNull CartAdapter.ViewHolder holder, int position) {
+        this.holder=holder;
         holder.itemView.setTag(items.get(position));
         holder.tvItemName.setText(items.get(position).getName());
         holder.tvItemDesc.setText(items.get(position).getDescription()); //optional, maybe remove later
         holder.tvItemPrice.setText(String.format("$%.2f",Double.parseDouble(items.get(position).getPrice())));
         holder.tvItemCount.setText("Quantity: " +String.valueOf(items.get(position).getQuantity()));
 
-        //TODO if we use images, set the image resource here
+        try{
+            URL url = new URL(items.get(position).getImage());
+            new ImageSyncInBackground().execute(url);
+        }
+        catch(Exception e){
+            Log.i("shopLog",e.getMessage());
+        }
     }
-
-
 
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    public class ImageSyncInBackground extends AsyncTask<URL,Integer, Bitmap> {
+
+        @Override
+        protected Bitmap doInBackground(URL... params) {
+            Bitmap image = null;
+            try {
+                URL url = params[0];
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+                InputStream inputStream = urlConnection.getInputStream();
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+                image = BitmapFactory.decodeStream(bufferedInputStream);
+                bufferedInputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+
+            return image;
+        }
+
+        protected void onPostExecute(Bitmap bitmap) {
+            if (bitmap != null) {
+                holder.ivItemImage.setImageBitmap(bitmap);
+            } else {
+                Toast.makeText((Context)activity, "Failed to Download Image", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

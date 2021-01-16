@@ -35,7 +35,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
     ArrayList<Item> items;
     ItemClicked activity;
-    String imageURI;
     ItemAdapter.ViewHolder holder;
 
     public ItemAdapter(Context context, ArrayList<Item> list) {

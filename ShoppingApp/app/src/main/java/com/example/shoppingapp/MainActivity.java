@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
     Button btnUploadItem, btnAddImage;
     ImageView ivImage;
     //String filePath;
-    URL imageUrl;
+    String imageUrl;
 
     TextView tvSubtotal;
     Button btnCheckout;
