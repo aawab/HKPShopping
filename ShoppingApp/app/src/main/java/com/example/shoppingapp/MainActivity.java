@@ -82,7 +82,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
             if(a.equals(items.get(position))){
                Item i = new Item(a.getName(),a.getPrice(),a.getDescription(),a.getImage());
                i.setQuantity(a.getQuantity()+1);
-                new CartAddOnlineInBackground().execute(i);
+                new CartAddOnlineInBackground().execute(i); //replaces same item with new item and
+                //new quantity
                 new CartSyncInBackground().execute();
                found=true;
             }
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
         if(!found){
             Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
-                    (position).getDescription(),items.get(position).getImage());
+                    (position).getDescription(),items.get(position).getImage()); //default quant 1
             Log.i("shopLog","picture:"+ i.getImage());
             new CartAddOnlineInBackground().execute(i);
             new CartSyncInBackground().execute();
@@ -103,6 +104,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        setTitle("Shopper"); //setting actionbar title
 
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id. etPassword);
@@ -149,7 +152,6 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         fragShopLayout = fragmentManager.findFragmentById(R.id.fragShopLayout);
         fragCartLayout = fragmentManager.findFragmentById(R.id.fragCartLayout);
 
-        //temporary, if we end up sticking to actionBar then we'll remove navFrag entirely
         fragmentManager.beginTransaction() .show(fragLoginLayout)
                                             .hide(fragRegisterLayout)
                                             .hide(fragUploadLayout)
@@ -677,6 +679,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
                 JsonArray itemsJsonArray = jsonObj.get("items").getAsJsonArray();
 
+                items.clear();
                 for (int index = 0; index < itemsJsonArray.size(); index++)
                 {
                     JsonElement jsonElement = itemsJsonArray.get(index);
@@ -685,7 +688,6 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                     items.add( new Item( itemJsonObject.get("itemname").getAsString(), itemJsonObject.
                             get("price").getAsString(), itemJsonObject.get("description").getAsString(),
                             itemJsonObject.get("picture").getAsString() ) );
-                    itemsAdapter.notifyDataSetChanged();
                 }
 
             }
@@ -876,7 +878,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
             if (cartUploadStatus)
             {
-                Toast.makeText(getApplicationContext(),"cart item saved",
+                Toast.makeText(getApplicationContext(),"Cart item saved!",
                         Toast.LENGTH_SHORT).show();
             }
             else

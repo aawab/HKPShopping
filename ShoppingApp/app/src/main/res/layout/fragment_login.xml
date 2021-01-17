@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,14 +10,31 @@
     android:orientation="vertical"
     tools:context=".LoginFragment">
 
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/ic_baseline_shopping_basket_24" />
+
+    <TextView
+        android:id="@+id/textView9"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:text="Welcome!"
+        android:textAlignment="center"
+        android:textSize="24sp" />
+
     <LinearLayout
         android:id="@+id/layoutUsername"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="150dp"
-        android:layout_marginRight="20dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginRight="30dp"
         android:orientation="horizontal">
 
         <TextView
@@ -42,9 +60,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
-        android:layout_marginLeft="20dp"
+        android:layout_marginLeft="30dp"
         android:layout_marginTop="50dp"
-        android:layout_marginRight="20dp"
+        android:layout_marginRight="30dp"
         android:orientation="horizontal">
 
         <TextView
@@ -69,19 +87,19 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="150dp"
+        android:layout_marginTop="100dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/btnLogin"
-            android:layout_width="wrap_content"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
             android:text="Login" />
 
         <Button
             android:id="@+id/btnRegisterLink"
-            android:layout_width="wrap_content"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:text="Register" />

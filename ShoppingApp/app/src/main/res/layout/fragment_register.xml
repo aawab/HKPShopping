@@ -7,11 +7,28 @@
     android:orientation="vertical"
     tools:context=".RegisterFragment">
 
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginBottom="10dp"
+        android:src="@drawable/ic_baseline_shopping_basket_24" />
+
+    <TextView
+        android:id="@+id/textView10"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="50dp"
+        android:text="Register Here!"
+        android:textAlignment="center"
+        android:textSize="24sp" />
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="50dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="0dp"
         android:layout_marginRight="50dp"
         android:gravity="center_horizontal"
         android:orientation="horizontal">
