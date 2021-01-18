@@ -33,9 +33,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         void onItemClicked(int position);
     }
 
-    ArrayList<Item> items;
-    ItemClicked activity;
-    ItemAdapter.ViewHolder holder;
+    private ArrayList<Item> items;
+    private ItemClicked activity;
+    private ItemAdapter.ViewHolder holder;
 
     public ItemAdapter(Context context, ArrayList<Item> list) {
         items=list;
@@ -44,8 +44,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
     public class ViewHolder extends RecyclerView.ViewHolder{
 
-        TextView tvItemName,tvItemDesc, tvItemPrice;
-        ImageView ivItemImage;
+        private TextView tvItemName,tvItemDesc, tvItemPrice;
+        private ImageView ivItemImage;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -82,9 +82,10 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         holder.tvItemName.setText(items.get(position).getName());
         holder.tvItemDesc.setText(items.get(position).getDescription()); //optional, maybe remove later
         holder.tvItemPrice.setText(String.format("$%.2f",Double.parseDouble(items.get(position).getPrice())));
+        ImageView ivItemImage = holder.ivItemImage;
         try{
             URL url = new URL(items.get(position).getImage());
-            new ImageSyncInBackground().execute(url);
+            new ImageSyncInBackground(ivItemImage).execute(url);
         }
         catch(Exception e){
             Log.i("shopLog",e.getMessage());
@@ -99,6 +100,11 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
     }
 
     public class ImageSyncInBackground extends AsyncTask<URL,Integer,Bitmap>{
+        private ImageView ivItemImage;
+
+        public ImageSyncInBackground(ImageView iv) {
+            this.ivItemImage=iv;
+        }
 
         @Override
         protected Bitmap doInBackground(URL... params) {
@@ -122,9 +128,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
         protected void onPostExecute(Bitmap bitmap) {
             if (bitmap != null) {
-                holder.ivItemImage.setImageBitmap(bitmap);
+                ivItemImage.setImageBitmap(bitmap);
             } else {
-                //Toast.makeText((Context)activity, "Failed to Download Image", Toast.LENGTH_LONG).show();
+                Toast.makeText((Context)activity, "Failed to Download Image", Toast.LENGTH_LONG).show();
             }
         }
     }

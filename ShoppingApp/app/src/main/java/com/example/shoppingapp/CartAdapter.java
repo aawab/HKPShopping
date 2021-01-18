@@ -23,9 +23,9 @@ import java.util.ArrayList;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
 
-    ArrayList<Item> items;
-    CartAdapter.ViewHolder holder;
-    Context activity;
+    private ArrayList<Item> items;
+    private CartAdapter.ViewHolder holder;
+    private Context activity;
 
     public CartAdapter(Context context, ArrayList<Item> list) {
         items=list;
@@ -34,8 +34,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
 
     public class ViewHolder extends RecyclerView.ViewHolder{
 
-        TextView tvItemName,tvItemDesc, tvItemPrice, tvItemCount;
-        ImageView ivItemImage;
+        private TextView tvItemName,tvItemDesc, tvItemPrice, tvItemCount;
+        private ImageView ivItemImage;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -72,9 +72,10 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
         holder.tvItemPrice.setText(String.format("$%.2f",Double.parseDouble(items.get(position).getPrice())));
         holder.tvItemCount.setText("Quantity: " +String.valueOf(items.get(position).getQuantity()));
 
+        ImageView iv = holder.ivItemImage;
         try{
             URL url = new URL(items.get(position).getImage());
-            new ImageSyncInBackground().execute(url);
+            new ImageSyncInBackground(iv).execute(url);
         }
         catch(Exception e){
             Log.i("shopLog",e.getMessage());
@@ -87,6 +88,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
     }
 
     public class ImageSyncInBackground extends AsyncTask<URL,Integer, Bitmap> {
+
+        private ImageView ivItemImage;
+
+        public ImageSyncInBackground(ImageView iv) {
+            this.ivItemImage=iv;
+        }
 
         @Override
         protected Bitmap doInBackground(URL... params) {
@@ -110,7 +117,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
 
         protected void onPostExecute(Bitmap bitmap) {
             if (bitmap != null) {
-                holder.ivItemImage.setImageBitmap(bitmap);
+                ivItemImage.setImageBitmap(bitmap);
             } else {
                 Toast.makeText((Context)activity, "Failed to Download Image", Toast.LENGTH_LONG).show();
             }

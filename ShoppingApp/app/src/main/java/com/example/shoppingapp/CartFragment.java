@@ -11,17 +11,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CartFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class CartFragment extends Fragment {
 
-    RecyclerView recyclerView;
-    RecyclerView.Adapter myAdapter;
-    RecyclerView.LayoutManager layoutManager;
-    View view;
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter myAdapter;
+    private RecyclerView.LayoutManager layoutManager;
+    private View view;
 
 
     public CartFragment() {

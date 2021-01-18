@@ -39,66 +39,39 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemClicked{
 
+    private EditText etUsername, etPassword;
+    private Button btnLogin, btnRegisterLink;
 
-    EditText etUsername, etPassword;
-    Button btnLogin, btnRegisterLink;
+    private EditText etRegisterUsername, etRegisterEmail, etRegisterPassword, etRegisterConfirmPassword;
+    private Button btnRegisterUser;
 
-    EditText etRegisterUsername, etRegisterEmail, etRegisterPassword, etRegisterConfirmPassword;
-    Button btnRegisterUser;
+    private EditText etUploadName, etUploadPrice, etUploadDescription, etImageUrl;
+    private TextView tvUrl;
+    private Button btnUploadItem, btnAddImage;
+    private ImageView ivImage;
+    private String imageUrl;
 
-    EditText etUploadName, etUploadPrice, etUploadDescription, etImageUrl;
-    TextView tvUrl;
-    Button btnUploadItem, btnAddImage;
-    ImageView ivImage;
-    String imageUrl;
+    private TextView tvSubtotal;
+    private Button btnCheckout;
 
-    TextView tvSubtotal;
-    Button btnCheckout;
+    private RecyclerView rvShop, rvCart;
+    private RecyclerView.Adapter<ItemAdapter.ViewHolder> itemsAdapter;
+    private RecyclerView.Adapter<CartAdapter.ViewHolder> cartAdapter;
 
-    RecyclerView rvShop, rvCart;
-    RecyclerView.Adapter<ItemAdapter.ViewHolder> itemsAdapter;
-    RecyclerView.Adapter<CartAdapter.ViewHolder> cartAdapter;
+    private ArrayList<Item> items;
+    private ArrayList<Item> cart;
 
-    ArrayList<Item> items;
-    ArrayList<Item> cart;
-
-    FragmentManager fragmentManager;
-    Fragment fragLoginLayout, fragRegisterLayout, fragUploadLayout, fragShopLayout,
+    private FragmentManager fragmentManager;
+    private Fragment fragLoginLayout, fragRegisterLayout, fragUploadLayout, fragShopLayout,
             fragCartLayout;
 
-    Boolean isLoggedIn; //bool for use for buttonClicks
-    Boolean isAdmin; //bool for creating items if admin
-    String jwtToken;
+    private Boolean isLoggedIn; //bool for use for buttonClicks
+    private Boolean isAdmin; //bool for creating items if admin
+    private String jwtToken;
 
-    double subTotal;
+    private double subTotal;
 
-    @Override
-    public void onItemClicked(int position)
-    {
-        boolean found=false;
 
-        for(Item a:cart)
-        {
-            if(a.equals(items.get(position))){
-               Item i = new Item(a.getName(),a.getPrice(),a.getDescription(),a.getImage());
-               i.setQuantity(a.getQuantity()+1);
-                new CartAddOnlineInBackground().execute(i); //replaces same item with new item and
-                //new quantity
-                new CartSyncInBackground().execute();
-               found=true;
-            }
-        }
-
-        if(!found){
-            Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
-                    (position).getDescription(),items.get(position).getImage()); //default quant 1
-            Log.i("shopLog","picture:"+ i.getImage());
-            new CartAddOnlineInBackground().execute(i);
-            new CartSyncInBackground().execute();
-        }
-
-        cartAdapter.notifyDataSetChanged();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -256,22 +229,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         });
     }
 
-   // @Override
-    //    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-    //        super.onActivityResult(requestCode, resultCode, data);
-    //        if(requestCode==1){
-    //            if(resultCode==RESULT_OK){
-    //                Uri imageUri = data.getData();
-    //                btnAddImage.setVisibility(View.GONE);
-    //                ivImage.setVisibility(View.VISIBLE);
-    //                ivImage.setImageURI(imageUri);
-    //
-    //                //filePath=imageUri.getPath();
-    //                //File file = new File(filePath);
-    //            }
-    //        }
-    //    }
-
+    //helper method to control backstack + fragment hierarchy
     @Override
     public void onBackPressed() {
         if(fragmentManager.findFragmentById(R.id.fragCartLayout).isVisible())
@@ -282,8 +240,6 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
 
         }
         super.onBackPressed();
-
-        //Log.i("shopLog",""+fragmentManager.getBackStackEntryAt(0).toString());
 
         Log.i("shopLog","num " + fragmentManager.getBackStackEntryCount());
         if(fragmentManager.getBackStackEntryCount() == 0 )
@@ -355,6 +311,40 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         return super.onOptionsItemSelected(item);
     }
 
+    //helper method to access and add items to the cart from shop fragment
+    @Override
+    public void onItemClicked(int position)
+    {
+        boolean found=false;
+
+        for(Item a:cart)
+        {
+            if(a.equals(items.get(position))){
+                Item i = new Item(a.getName(),a.getPrice(),a.getDescription(),a.getImage());
+                i.setQuantity(a.getQuantity()+1);
+                new CartAddOnlineInBackground().execute(i); //replaces same item with new item and
+                //new quantity
+                new CartSyncInBackground().execute();
+                found=true;
+            }
+        }
+
+        if(!found){
+            Item i = new Item(items.get(position).getName(),items.get(position).getPrice(),items.get
+                    (position).getDescription(),items.get(position).getImage()); //default quant 1
+            Log.i("shopLog","picture:"+ i.getImage());
+            new CartAddOnlineInBackground().execute(i);
+            new CartSyncInBackground().execute();
+        }
+
+        cartAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * Numerous AsyncTask helper classes to handle backend communication
+     */
+
+    //POST login details and check for HTTP_OK
     public class LoginInBackground extends AsyncTask<String, Integer, Boolean>
     {
 
@@ -396,14 +386,6 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
                     String line;
 
                     BufferedReader responseReader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-
-//                    while ((line = responseReader.readLine()) != null)
-//                    {
-//                        response += line;
-//                    }
-//                    isAdmin = response.indexOf("admin") > 0;
-                    // JsonParser.parseString(response).
-
                     JsonObject jsonObj = new JsonParser().parse(responseReader).getAsJsonObject();
 
                     if (jsonObj.get("user").getAsJsonObject().get("role").toString().equals("\"admin\""))
@@ -464,6 +446,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
     }
 
+    //POST a new user in the user list
     public class RegisterInBackground extends AsyncTask<String, Integer, Boolean>
     {
 
@@ -555,6 +538,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
     }
 
+    //POST a new item in the shop
     public class UploadInBackground extends AsyncTask<String, Integer, Boolean>
     {
 
@@ -654,6 +638,7 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
     }
 
+    //GET the shop items
     public class DownloadInBackground extends AsyncTask<String, Integer, Boolean>
     {
         @Override
@@ -729,6 +714,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
     }
 
+
+    //GET the cart items
     public class CartSyncInBackground extends AsyncTask<String,Integer,Boolean>{
 
         @Override
@@ -800,7 +787,9 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
     }
 
+    //POST a cart item
     public class CartAddOnlineInBackground extends AsyncTask<Item, Integer, Boolean>{
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -889,6 +878,8 @@ public class MainActivity extends AppCompatActivity implements ItemAdapter.ItemC
         }
     }
 
+
+    //CLEAR the cart items
     public class CheckoutCartInBackground extends AsyncTask<String,Integer,Boolean>{
 
         @Override
